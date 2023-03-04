@@ -12,6 +12,10 @@ class Router:
         }
 
     @property
+    def routes(self):
+        return self.__routes
+
+    @property
     def services(self):
         return self.__services
 
@@ -26,6 +30,11 @@ class Router:
             else:
                 raise HTTPException(status_code=405, detail='Method Not Allowed')
         return wrap
+
+    def add_routes(self, routes):
+        for key, key_o in zip(routes, self.__routes):
+            self.__routes[key_o] += routes[key]
+        print('===')
 
     def init_routes(self, app):
         method_ = {

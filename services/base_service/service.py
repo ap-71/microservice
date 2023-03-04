@@ -24,6 +24,10 @@ class Service:
             self.__router.add_service(self)
 
     @property
+    def app(self):
+        return self.__app
+
+    @property
     def router(self):
         return self.__router
 
@@ -39,13 +43,7 @@ class Service:
         url = url if url is not None else self.__url_manager
         url = url.replace('{action}', 'registration')
         resp = self.__session.post(url,
-                                   data=ServiceState(
-                                       service_name=self.__name,
-                                       state=self.__state,
-                                       type=self.__type,
-                                       host=self.__host,
-                                       port=self.__port
-                                   ).json(),
+                                   data=self.make_service_state(),
                                    headers={'Content-type': 'application/json'})
         return resp
 
@@ -59,17 +57,25 @@ class Service:
 
         return method_(*args) if method_ is not None else HTTPException(status_code=405, detail='Method Not Allowed')
 
+    def make_service_state(self, **kwargs):
+        _service_name = kwargs.get('service_name', self.__name)
+        _state = kwargs.get('state', self.__state)
+        _type = kwargs.get('type', self.__type)
+        _host = kwargs.get('host', self.__host)
+        _port = kwargs.get('port', self.__port)
+        return ServiceState(
+            service_name=_service_name,
+            state=_state,
+            type=_type,
+            host=_host,
+            port=_port
+        ).json()
+
     def set_state(self, state: State):
         if state != self.__state:
             url = self.__url_manager.replace('{action}', 'state/' + self.__name)
             session = self.__session
-            data = ServiceState(
-                service_name=self.__name,
-                state=state.value,
-                type=self.__type,
-                host=self.__host,
-                port=self.__port
-            ).json()
+            data = self.make_service_state(state=state.value)
             headers = {'Content-type': 'application/json'}
             session.put(url, data=data, headers=headers)
             self.__state = state
